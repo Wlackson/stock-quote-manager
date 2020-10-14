@@ -1,0 +1,39 @@
+version: '3.1'
+
+services:
+  stock_quote_manager:
+    build:
+      context: ./
+      dockerfile: ./Dockerfile
+    image: stock_quote_manager-api-01
+    environment:
+      - MYSQL_DATABASE=bootdb
+      - MYSQL_USER=root
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+      - MYSQL_HOST=stocks_db
+      - ADDITIONAL_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n
+      - PROFILE=dev
+    ports:
+      - '8081:8081'
+    depends_on:
+      - stocks_db
+    links:
+      - stocks_db
+
+  stocks_db:
+    image: mysql:5.7
+    restart: always
+    command: "--innodb_use_native_aio=0"
+    ports:
+      - '3306:3306'
+    environment:
+      - MYSQL_ROOT_HOST=%
+      - MYSQL_USER=root
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+      - MYSQL_DATABASE=bootdb
+    volumes:
+      - ./docker/volume_mysql:/var/lib/mysql
+      - ./data/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+
+volumes:
+  mysql_data: { driver: local }
